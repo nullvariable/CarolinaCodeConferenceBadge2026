@@ -4,12 +4,20 @@
 # Local WiFi credentials — copy settings.toml.example and edit locally.
 settings.toml
 
+# Local secrets (Ollama cloud API key for the Doomish relay). Never commit.
+.env
+*.env
+relay/relay.env
+
 # CircuitPython auto-generated boot log (contains the specific board's UID + MAC).
 boot_out.txt
 
 # CircuitPython bytecode caches (rare on CIRCUITPY, but just in case).
 __pycache__/
 *.py[cod]
+
+# Desktop simulator venv. Repo-only, like img/ — never copied to the badge.
+sim/.venv/
 
 # Editor / OS scratch files that end up on the CIRCUITPY drive.
 *.tmp
