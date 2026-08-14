@@ -174,11 +174,26 @@ status.anchor_point = (0.5, 0.5)
 status.anchored_position = (64, 22)
 scene.append(status)
 
+# The list has to fit between the status line and the hints at the bottom.
+# A fixed 12 px step ran out of room at nine samples -- the last entry
+# landed on top of "S1:up S2:down". Derive the step from how many there
+# actually are, capped at 12 so a short list looks exactly as it always did.
+#
+# Both of these are label CENTRES, and a terminalio label is 12 px tall, so
+# its ink runs 6 px either side. hint1 is centred at 144, so its ink starts
+# at 138 and the last entry's centre has to stay at or below 130.
+LIST_TOP = 40
+LIST_BOTTOM = 130
+
 item_labels = []
+_step = 12
+if len(SAMPLES) > 1:
+    _step = min(12, (LIST_BOTTOM - LIST_TOP) // (len(SAMPLES) - 1))
+
 for i, name in enumerate(SAMPLES):
     lbl = label.Label(terminalio.FONT, text=name, color=0x808080)
     lbl.anchor_point = (0.5, 0.5)
-    lbl.anchored_position = (64, 40 + i * 12)
+    lbl.anchored_position = (64, LIST_TOP + i * _step)
     scene.append(lbl)
     item_labels.append(lbl)
 
