@@ -66,6 +66,8 @@ public/
     │                         code.py at the top level of this directory to run
     │                         it on the badge (back up the existing code.py first).
     ├── CCCLogo/              Splash animation — BMP logo + backlight fade + LED bounce.
+    ├── Doomish/              Self-playing Doom-like. Raycaster, OODA loop, and a
+    │                         directive strip driven by a networked LLM.
     ├── DVDBounce/            Bouncing "DVD" screensaver with color-shifting LED trail.
     ├── Launcher/             Boot-time sample picker. Preloaded as code.py — restore
     │                         from here after copying another sample over code.py.
