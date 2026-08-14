@@ -69,6 +69,8 @@ public/
     ├── Doomish/              Self-playing Doom-like. Raycaster, OODA loop, and a
     │                         directive strip driven by a networked LLM.
     ├── DVDBounce/            Bouncing "DVD" screensaver with color-shifting LED trail.
+    ├── GameOfLife/           Conway's Life on a 42x45 torus, nine seed patterns,
+    │                         auto-advancing when a board settles.
     ├── Launcher/             Boot-time sample picker. Preloaded as code.py — restore
     │                         from here after copying another sample over code.py.
     ├── LEDLab/               Pattern + palette + speed demo across 16 patterns.
