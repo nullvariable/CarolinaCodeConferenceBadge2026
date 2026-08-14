@@ -240,6 +240,7 @@ class Relay(object):
         self.args = args
         self.api_key = os.environ.get("OLLAMA_API_KEY", "")
         self.sock = None
+        self.dashboard = None
         self.pending = {}
         self.cv = threading.Condition()
         self.running = True
@@ -252,6 +253,24 @@ class Relay(object):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.sock.bind(("0.0.0.0", self.args.port))
+
+        # The dashboard is an observer and an optional one. A missing file, a
+        # syntax error in it, or a port already in use must all cost the relay
+        # nothing: the directive path is the product.
+        if self.args.dashboard:
+            try:
+                import dashboard as dashboard_mod
+
+                dash = dashboard_mod.Dashboard(
+                    port=self.args.dashboard_port,
+                    system_prompt=SYSTEM_PROMPT,
+                    log=log,
+                )
+                if dash.start():
+                    self.dashboard = dash
+            except Exception as exc:
+                log("dashboard unavailable (%s: %s), continuing without it"
+                    % (type(exc).__name__, exc))
 
         mode = "mock" if self.args.mock else "%s via %s" % (self.args.model, self.args.url)
         log("listening on udp/%d, strategy = %s" % (self.args.port, mode))
@@ -339,6 +358,14 @@ class Relay(object):
                 addr[0], addr[1], state.get("seq"), directive, elapsed, source, why
             ))
 
+            if self.dashboard is not None:
+                # describe() is pure, so recomputing it here yields the exact
+                # text ask_ollama sent -- which is the point of showing it.
+                self.dashboard.record(
+                    addr, state, describe(state), directive, why, source,
+                    elapsed, self.stats,
+                )
+
             total = sum(self.stats.values())
             if total and total % 20 == 0:
                 log("   stats after %d: %s" % (total, self.stats))
@@ -351,6 +378,11 @@ def main():
     p.add_argument("--url", default=DEFAULT_URL)
     p.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT)
     p.add_argument("--mock", action="store_true", help="skip the LLM, use heuristics only")
+    p.add_argument("--dashboard", action="store_true",
+                   default=os.environ.get("DOOMISH_DASHBOARD") == "1",
+                   help="serve the web dashboard (or set DOOMISH_DASHBOARD=1)")
+    p.add_argument("--dashboard-port", type=int,
+                   default=int(os.environ.get("DOOMISH_DASHBOARD_PORT", "8080")))
     p.add_argument("-v", "--verbose", action="store_true", help="log every inbound state")
     args = p.parse_args()
 

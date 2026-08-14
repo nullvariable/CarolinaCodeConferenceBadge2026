@@ -24,7 +24,9 @@ PORT = int(os.environ.get("DOOMISH_PORT", "5115"))
 BADGE_PORT = int(os.environ.get("DOOMISH_BADGE_PORT", "5116"))
 
 DIRS = ("N", "E", "S", "W")
+STEPS = {"N": (0, -1), "S": (0, 1), "E": (1, 0), "W": (-1, 0)}
 ITEM_KINDS = ("medkit", "ammo", "keycard")
+MAP_MAX = 31
 
 
 def log(msg):
@@ -60,11 +62,21 @@ class FakeGame(object):
             self.recent.append(directive)
             self.recent = self.recent[-6:]
 
-        step = {"N": (0, -1), "S": (0, 1), "E": (1, 0), "W": (-1, 0)}[self.facing]
-        self.pos = [
-            max(0, min(31, self.pos[0] + step[0])),
-            max(0, min(31, self.pos[1] + step[1])),
-        ]
+        # Walk, and turn away from the edge rather than stopping against it.
+        # Clamping pinned it: facing only changes on an EXPLORE_*, so the first
+        # HUNT after reaching row 0 walked it into the edge and every directive
+        # until the next EXPLORE_ held it there. Nine identical beacons in a row
+        # look like a wedged badge on the dashboard, which is the one thing the
+        # fallback demo cannot afford to look like.
+        for _ in range(4):
+            dx, dy = STEPS[self.facing]
+            nx, ny = self.pos[0] + dx, self.pos[1] + dy
+            if 0 <= nx <= MAP_MAX and 0 <= ny <= MAP_MAX:
+                break
+            self.facing = random.choice([d for d in DIRS if d != self.facing])
+        else:
+            nx, ny = self.pos          # boxed in all four ways, stay put
+        self.pos = [nx, ny]
 
         enemies = []
         for _ in range(random.choice([0, 0, 1, 1, 2])):
